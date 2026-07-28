@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MONSTERDEX — Your Can Vault</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0b0c'/%3E%3Cpath d='M25 78 L40 22 M46 78 L61 22 M67 78 L82 22' stroke='%23ff2438' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0b0b0c;
+    --surface:#151517;
+    --surface-2:#1c1c1f;
+    --steel:#2c2c30;
+    --line:#333338;
+    --acid:#ff2438;
+    --acid-2:#c91630;
+    --acid-glow: rgba(255,36,56,0.35);
+    --bone:#f4f4f2;
+    --dust:#9b9ba3;
+    --ice:#ececed;
+    --tropic:#ff4d6d;
+    --tea:#d7a84e;
+    --nitro:#7c8591;
+    --javabrown:#a9713f;
+    --ember:#d31c37;
+    --chrome:#c9ccd1;
+    --danger:#ff5c5c;
+    --font-display:'Bungee', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    --radius:14px;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      repeating-linear-gradient(115deg, rgba(255,36,56,0.025) 0px, rgba(255,36,56,0.025) 2px, transparent 2px, transparent 90px),
+      radial-gradient(ellipse at top, #141416 0%, var(--void) 55%);
+    color:var(--bone);
+    font-family:var(--font-body);
+    min-height:100vh;
+    line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{ background:var(--acid); color:#0b0b0c; }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:var(--surface); }
+  ::-webkit-scrollbar-thumb{ background:var(--acid-2); border-radius:6px; }
+
+  a{ color:var(--acid); }
+
+  button{ font-family:inherit; cursor:pointer; }
+
+  :focus-visible{ outline:2px solid var(--acid); outline-offset:2px; }
+
+  .wrap{ max-width:1200px; margin:0 auto; padding:0 20px 80px; }
+
+  /* ---------- Designer-can textures ---------- */
+  .rim-dots{
+    height:13px;
+    background-image:radial-gradient(circle, var(--steel) 1.6px, transparent 1.7px);
+    background-size:12px 12px; background-position:6px center;
+    opacity:.7;
+  }
+  .hazard-strip{
+    height:9px;
+    background:repeating-linear-gradient(45deg, var(--acid) 0 13px, #0b0b0c 13px 26px);
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .hex-field{
+    position:absolute; inset:0; pointer-events:none; opacity:.05; z-index:0;
+    background-image:
+      linear-gradient(30deg, var(--acid) 12%, transparent 12.5%, transparent 87%, var(--acid) 87.5%, var(--acid)),
+      linear-gradient(150deg, var(--acid) 12%, transparent 12.5%, transparent 87%, var(--acid) 87.5%, var(--acid)),
+      linear-gradient(30deg, var(--acid) 12%, transparent 12.5%, transparent 87%, var(--acid) 87.5%, var(--acid)),
+      linear-gradient(150deg, var(--acid) 12%, transparent 12.5%, transparent 87%, var(--acid) 87.5%, var(--acid)),
+      linear-gradient(60deg, var(--acid) 25%, transparent 25.5%, transparent 75%, var(--acid) 75%, var(--acid)),
+      linear-gradient(60deg, var(--acid) 25%, transparent 25.5%, transparent 75%, var(--acid) 75%, var(--acid));
+    background-size:44px 76px;
+    background-position:0 0, 0 0, 22px 38px, 22px 38px, 0 0, 22px 38px;
+  }
+  .claw-watermark{
+    position:absolute; top:-30px; right:-40px; width:340px; opacity:.05;
+    pointer-events:none; z-index:0; transform:rotate(8deg);
+  }
+  @keyframes holoShift{ 0%,100%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } }
+  .holo-fill{
+    background:linear-gradient(120deg, var(--ember), var(--tea), var(--acid), var(--ice), var(--nitro), var(--ember));
+    background-size:300% 300%;
+    animation:holoShift 5s ease infinite;
+  }
+
+  /* ---------- Storage banner ---------- */
+  .storage-banner{
+    background:#3a2a05; color:#ffd684; font-size:13px; font-family:var(--font-body);
+    text-align:center; padding:10px 16px; border-bottom:1px solid #5c4210;
+    display:none;
+  }
+  .storage-banner.show{ display:block; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:56px 20px 30px;
+    text-align:center;
+    overflow:hidden;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-inner{ max-width:1200px; margin:0 auto; }
+  .brand-row{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    opacity:0; animation:heroIn .7s ease-out forwards;
+  }
+  .claw-mark{ display:inline-block; }
+  .claw-mark svg{ display:block; }
+  h1.wordmark{
+    font-family:var(--font-display);
+    font-size:clamp(34px, 7vw, 64px);
+    letter-spacing:1px;
+    margin:0;
+    color:var(--bone);
+    text-shadow: 0 0 14px var(--acid-glow), 0 0 2px var(--acid);
+  }
+  h1.wordmark span{ color:var(--acid); }
+  .tagline{
+    font-family:var(--font-mono);
+    color:var(--dust);
+    font-size:13px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    margin:10px 0 0;
+    opacity:0; animation:heroIn .7s ease-out .15s forwards;
+  }
+  .slash-rule{
+    width:180px; height:14px; margin:18px auto 0;
+    opacity:0; animation:heroIn .6s ease-out .3s forwards;
+  }
+  @keyframes heroIn{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
+
+  .stat-strip{
+    margin:28px auto 0; max-width:820px;
+    display:flex; flex-wrap:wrap; justify-content:center; gap:0;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);
+  }
+  .stat-strip .stat{
+    flex:1 1 140px; padding:14px 10px; text-align:center;
+    border-left:1px solid var(--line);
+  }
+  .stat-strip .stat:first-child{ border-left:none; }
+  .stat-strip .stat b{
+    display:block; font-size:22px; color:var(--acid); font-weight:700;
+  }
+  .stat-strip .stat span{
+    display:block; font-size:10px; letter-spacing:2px; color:var(--dust); text-transform:uppercase; margin-top:4px;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    padding:22px 0 6px;
+  }
+  .btn{
+    background:var(--surface-2); color:var(--bone); border:1px solid var(--line);
+    border-radius:10px; padding:10px 16px; font-size:14px; font-weight:600;
+    display:inline-flex; align-items:center; gap:8px; transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{ border-color:var(--acid-2); box-shadow:0 0 0 1px var(--acid-2) inset; }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{
+    background:var(--acid); color:#0b0b0c; border-color:var(--acid);
+  }
+  .btn-primary:hover{ box-shadow:0 0 18px var(--acid-glow); }
+  .btn-ghost{ background:transparent; }
+  .btn-danger:hover{ border-color:var(--danger); box-shadow:0 0 0 1px var(--danger) inset; }
+  .btn-sm{ padding:7px 12px; font-size:12.5px; }
+
+  .search-input, select.select, input.field, textarea.field{
+    background:var(--surface); border:1px solid var(--line); color:var(--bone);
+    border-radius:10px; padding:10px 14px; font-size:14px; font-family:inherit;
+  }
+  .search-input{ flex:1 1 220px; min-width:160px; }
+  .search-input:focus, select.select:focus, input.field:focus, textarea.field:focus{
+    border-color:var(--acid-2);
+  }
+
+  .toolbar-right{ margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+
+  .unit-toggle{
+    display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  }
+  .unit-toggle button{
+    background:var(--surface-2); color:var(--dust); border:none; padding:10px 14px;
+    font-size:12.5px; font-weight:700; letter-spacing:.5px;
+  }
+  .unit-toggle button:not(:last-child){ border-right:1px solid var(--line); }
+  .unit-toggle button.active{ background:var(--acid); color:#0b0b0c; }
+
+  .btn.fav-toggle.active{ background:var(--acid); color:#0b0b0c; border-color:var(--acid); }
+
+  .filter-row{
+    display:flex; flex-wrap:wrap; gap:8px; padding:14px 0 4px;
+  }
+  .chip{
+    border:1px solid var(--line); background:var(--surface);
+    color:var(--dust); padding:6px 14px; border-radius:999px;
+    font-size:12.5px; font-weight:600; letter-spacing:.3px;
+  }
+  .chip.active{ background:var(--acid); color:#0b0b0c; border-color:var(--acid); }
+
+  /* ---------- Achievements ---------- */
+  .achievements{
+    display:flex; gap:10px; overflow-x:auto; padding:18px 2px 10px;
+    scrollbar-width:thin;
+  }
+  .badge{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:9px 14px; min-width:170px; filter:grayscale(1); opacity:.4;
+    transition:opacity .2s ease, filter .2s ease, box-shadow .2s ease;
+  }
+  .badge.earned{
+    filter:none; opacity:1; border-color:var(--acid-2);
+    box-shadow:0 0 14px rgba(255,36,56,.15);
+  }
+  .badge .icon{ font-size:20px; }
+  .badge .txt b{ display:block; font-size:12px; }
+  .badge .txt small{ display:block; font-size:10.5px; color:var(--dust); }
+
+  /* ---------- Gallery ---------- */
+  .section-label{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--dust); margin:26px 0 12px; display:flex; align-items:center; gap:10px;
+  }
+  .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+  .series-breakdown{ display:flex; flex-direction:column; gap:9px; margin-bottom:6px; }
+  .series-bar-row{ display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:11.5px; }
+  .series-bar-label{
+    width:130px; flex:0 0 auto; color:var(--dust); text-transform:uppercase;
+    letter-spacing:1px; font-size:10.5px; text-align:right;
+  }
+  .series-bar-track{
+    flex:1; height:10px; background:var(--surface-2); border-radius:6px;
+    overflow:hidden; border:1px solid var(--line);
+  }
+  .series-bar-fill{ height:100%; border-radius:6px; transition:width .4s ease; }
+  .series-bar-count{ width:24px; flex:0 0 auto; text-align:left; color:var(--bone); font-weight:700; }
+  .breakdown-empty{ color:var(--dust); font-size:13px; }
+
+  .gallery{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+    gap:20px;
+  }
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+    animation:cardIn .45s ease-out backwards;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .card:hover{ border-color:var(--acid-2); transform:translateY(-3px); }
+  @keyframes cardIn{ from{ opacity:0; transform:translateY(14px) scale(.98);} to{ opacity:1; transform:translateY(0) scale(1);} }
+
+  .card-media{
+    aspect-ratio:4/3; width:100%; position:relative; overflow:hidden; background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 8px),
+      linear-gradient(160deg, #1d1d20, #0e0e10);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .card-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .card-media .placeholder-claw{ opacity:.25; width:46%; }
+  .series-tag{
+    position:absolute; top:10px; left:10px;
+    background:rgba(10,10,11,0.75); border:1px solid var(--tag-color, var(--acid));
+    color:var(--tag-color, var(--acid));
+    font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+    padding:4px 9px; border-radius:999px; font-weight:700;
+  }
+  .corner-claw{ position:absolute; top:8px; right:8px; opacity:.55; width:22px; }
+  .ltd-ribbon{
+    position:absolute; top:13px; right:-30px; width:126px; text-align:center;
+    transform:rotate(40deg); z-index:2;
+    color:#0b0b0c; font-family:var(--font-mono); font-weight:800; font-size:10px;
+    letter-spacing:1.5px; text-transform:uppercase; padding:3px 0;
+    box-shadow:0 2px 8px rgba(0,0,0,.45);
+  }
+  .holo-pill{
+    display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px;
+    font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    color:#0b0b0c; vertical-align:middle;
+  }
+
+  .card-body{ padding:14px 14px 6px; cursor:pointer; flex:1; }
+  .card-name{
+    font-family:var(--font-display); font-size:16.5px; margin:0 0 8px; color:var(--bone);
+    line-height:1.25;
+  }
+  .card-stats-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--font-mono); font-size:13px; color:var(--dust); margin:10px 0 6px;
+  }
+  .card-stats-row .stat-price{ color:var(--acid); font-weight:700; }
+  .card-radar-mini{ display:flex; justify-content:center; margin:2px 0 4px; }
+
+  .card-actions{
+    display:flex; justify-content:space-between; align-items:center; gap:4px; padding:6px 10px 10px;
+    border-top:1px solid var(--line); margin-top:auto;
+  }
+  .card-actions .action-group{ display:flex; gap:4px; }
+  .icon-btn{
+    background:transparent; border:none; color:var(--dust); font-size:15px;
+    padding:6px 8px; border-radius:8px; line-height:1;
+  }
+  .icon-btn:hover{ background:var(--surface-2); color:var(--bone); }
+  .icon-btn.delete-btn:hover{ color:var(--danger); }
+  .icon-btn.pin-btn.active{ color:var(--acid); text-shadow:0 0 8px var(--acid-glow); }
+
+  .empty-state{
+    text-align:center; padding:70px 20px; color:var(--dust);
+  }
+  .empty-state svg{ width:90px; opacity:.3; margin-bottom:16px; }
+  .empty-state h3{ font-family:var(--font-display); color:var(--bone); font-size:20px; margin:0 0 8px; }
+  .empty-state p{ max-width:360px; margin:0 auto; font-size:14px; }
+
+  /* ---------- Claw rating ---------- */
+  .claw-rating{ display:inline-flex; gap:3px; }
+  .claw-rating button{
+    background:none; border:none; padding:2px; display:flex;
+  }
+  .claw-rating svg path{ stroke:var(--steel); transition:stroke .1s ease; }
+  .claw-rating svg.filled path{ stroke:var(--acid); filter:drop-shadow(0 0 3px var(--acid-glow)); }
+  .claw-rating.static button{ cursor:default; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(6,6,7,0.78); backdrop-filter:blur(3px);
+    display:none; align-items:flex-start; justify-content:center; z-index:100;
+    padding:40px 16px; overflow-y:auto;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    max-width:620px; width:100%; padding:26px 26px 28px; position:relative;
+    animation:modalIn .25s ease-out;
+    margin-bottom:40px;
+  }
+  @keyframes modalIn{ from{ opacity:0; transform:translateY(16px) scale(.98);} to{ opacity:1; transform:translateY(0) scale(1);} }
+  .modal h2{
+    font-family:var(--font-display); font-size:20px; margin:0 0 18px; padding-right:30px;
+    color:var(--bone);
+  }
+  .modal-close{
+    position:absolute; top:20px; right:20px; background:none; border:none;
+    color:var(--dust); font-size:22px; line-height:1;
+  }
+  .modal-close:hover{ color:var(--bone); }
+
+  .field-group{ margin-bottom:16px; }
+  .field-group label{
+    display:block; font-size:12px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+    color:var(--dust); margin-bottom:6px;
+  }
+  .field-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .field-row .field-group{ flex:1 1 160px; }
+  input.field, select.select, textarea.field{ width:100%; }
+  textarea.field{ resize:vertical; min-height:70px; }
+
+  .slider-row{ display:flex; align-items:center; gap:12px; }
+  .slider-row input[type=range]{ flex:1; accent-color:var(--acid); }
+  .slider-row .val{
+    font-family:var(--font-mono); font-weight:700; color:var(--acid); min-width:26px; text-align:right;
+  }
+
+  .stepper{ display:flex; align-items:center; gap:10px; }
+  .stepper button{
+    width:32px; height:32px; border-radius:8px; background:var(--surface-2); border:1px solid var(--line);
+    color:var(--bone); font-size:16px; font-weight:700;
+  }
+  .stepper button:hover{ border-color:var(--acid-2); }
+  .stepper input{ width:60px; text-align:center; }
+
+  .toggle-switch{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; }
+  .toggle-switch .track{
+    width:42px; height:24px; border-radius:999px; background:var(--steel); position:relative; transition:background .15s ease;
+  }
+  .toggle-switch .track::after{
+    content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
+    background:var(--bone); transition:transform .15s ease;
+  }
+  .toggle-switch.on .track{ background:var(--acid-2); }
+  .toggle-switch.on .track::after{ transform:translateX(18px); background:#0b0b0c; }
+
+  .image-drop{
+    border:1.5px dashed var(--line); border-radius:12px; padding:16px; text-align:center;
+    color:var(--dust); font-size:13px; position:relative; cursor:pointer;
+    background:var(--surface-2);
+  }
+  .image-drop:hover{ border-color:var(--acid-2); }
+  .image-drop img{ max-width:100%; max-height:180px; border-radius:8px; display:block; margin:0 auto 8px; }
+  .image-drop input[type=file]{
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  }
+
+  .form-actions{
+    display:flex; justify-content:flex-end; gap:10px; margin-top:22px;
+    border-top:1px solid var(--line); padding-top:18px;
+  }
+
+  /* ---------- Detail modal ---------- */
+  .detail-head{ display:flex; gap:18px; margin-bottom:6px; flex-wrap:wrap; }
+  .detail-media{
+    width:150px; height:150px; border-radius:12px; overflow:hidden; flex:0 0 auto; position:relative;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 8px),
+      linear-gradient(160deg,#1d1d20,#0e0e10);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .detail-media img{ width:100%; height:100%; object-fit:cover; }
+  .detail-media svg{ width:50%; opacity:.25; }
+  .detail-info{ flex:1 1 200px; }
+  .detail-info h2{ margin:0 0 6px; padding:0; }
+  .detail-stat-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; margin:18px 0;
+    font-family:var(--font-mono); font-size:13px;
+  }
+  .detail-stat-grid div b{ display:block; color:var(--acid); font-size:15px; }
+  .detail-stat-grid div span{ color:var(--dust); font-size:10.5px; letter-spacing:1px; text-transform:uppercase; }
+  .detail-radar{ display:flex; justify-content:center; margin:14px 0; }
+  .detail-notes{
+    background:var(--surface-2); border-radius:10px; padding:14px; font-size:13.5px;
+    color:var(--bone); white-space:pre-wrap; margin-top:6px; border:1px solid var(--line);
+  }
+  .detail-actions{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; margin-top:22px; border-top:1px solid var(--line); padding-top:18px; }
+
+  /* ---------- Toast ---------- */
+  .toast-stack{
+    position:fixed; bottom:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:10px;
+  }
+  .toast{
+    background:var(--surface-2); border:1px solid var(--acid-2); color:var(--bone);
+    padding:12px 18px; border-radius:10px; font-size:13.5px; max-width:300px;
+    box-shadow:0 6px 22px rgba(0,0,0,.4), 0 0 16px rgba(255,36,56,.12);
+    animation:toastIn .25s ease-out;
+  }
+  .toast.danger{ border-color:var(--danger); }
+  @keyframes toastIn{ from{ opacity:0; transform:translateX(20px);} to{ opacity:1; transform:translateX(0);} }
+  @keyframes toastOut{ from{ opacity:1;} to{ opacity:0; transform:translateX(20px);} }
+
+  footer.site-footer{
+    text-align:center; color:var(--dust); font-size:12px; padding:40px 20px 10px; font-family:var(--font-mono);
+  }
+
+  @media (max-width:640px){
+    .toolbar-right{ margin-left:0; width:100%; }
+    .toolbar-right .btn{ flex:1; justify-content:center; }
+    .detail-head{ flex-direction:column; align-items:center; text-align:center; }
+    .detail-stat-grid{ grid-template-columns:1fr 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="rim-dots" aria-hidden="true"></div>
+  <div class="hazard-strip" aria-hidden="true"></div>
+
+  <div class="storage-banner" id="storageBanner">
+    ⚠ This preview can't save between visits. Download this file and open it directly in your browser (double-click it) so your vault persists.
+  </div>
+
+  <header class="hero">
+    <div class="hex-field" aria-hidden="true"></div>
+    <svg class="claw-watermark" viewBox="0 0 24 32" aria-hidden="true"><path d="M2 30 L7 2" stroke="#ff2438" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M9 30 L14 2" stroke="#ff2438" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M16 30 L21 2" stroke="#ff2438" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    <div class="hero-inner" style="position:relative; z-index:1;">
+      <div class="brand-row">
+        <span class="claw-mark">
+          <svg width="30" height="40" viewBox="0 0 24 32"><path d="M2 30 L7 2" stroke="#ff2438" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M9 30 L14 2" stroke="#ff2438" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M16 30 L21 2" stroke="#ff2438" stroke-width="3" stroke-linecap="round" fill="none"/></svg>
+        </span>
+        <h1 class="wordmark">MONSTER<span>DEX</span></h1>
+      </div>
+      <p class="tagline">Track every can. Rate every sip.</p>
+      <div class="slash-rule">
+        <svg width="180" height="14" viewBox="0 0 180 14" preserveAspectRatio="none"><path d="M0 12 L60 2" stroke="#ff2438" stroke-width="2" opacity=".8"/><path d="M65 12 L120 2" stroke="#ff2438" stroke-width="2" opacity=".6"/><path d="M125 12 L180 2" stroke="#ff2438" stroke-width="2" opacity=".4"/></svg>
+      </div>
+
+      <div class="stat-strip" id="statStrip"></div>
+    </div>
+  </header>
+  <div class="hazard-strip" aria-hidden="true"></div>
+
+  <div class="wrap">
+
+    <div class="toolbar">
+      <button class="btn btn-primary" id="addBtn">＋ Add a Can</button>
+      <button class="btn" id="surpriseBtn">🎲 Surprise Me</button>
+      <input type="search" class="search-input" id="searchInput" placeholder="Search your vault...">
+      <select class="select" id="sortSelect">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="rating_desc">Rating: high to low</option>
+        <option value="rating_asc">Rating: low to high</option>
+        <option value="cans_desc">Most cans had</option>
+        <option value="price_desc">Priciest first</option>
+        <option value="price_asc">Cheapest first</option>
+        <option value="name_asc">Name A–Z</option>
+      </select>
+      <div class="unit-toggle" role="group" aria-label="Can size units">
+        <button type="button" data-unit="oz">OZ</button>
+        <button type="button" data-unit="ml">ML</button>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-sm fav-toggle" id="favToggleBtn" title="Show only favorites">☆ Favorites</button>
+        <button class="btn btn-sm" id="exportJsonBtn" title="Full backup, re-importable">⬇ JSON</button>
+        <button class="btn btn-sm" id="exportCsvBtn" title="Spreadsheet-friendly">⬇ CSV</button>
+        <button class="btn btn-sm" id="importBtn">⬆ Import</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+        <button class="btn btn-sm btn-danger" id="resetBtn">🗑 Reset</button>
+      </div>
+    </div>
+
+    <div class="filter-row" id="filterRow"></div>
+
+    <div class="section-label">Achievements</div>
+    <div class="achievements" id="achievementsRow"></div>
+
+    <div class="section-label">Series Breakdown</div>
+    <div class="series-breakdown" id="seriesBreakdown"></div>
+
+    <div class="section-label">Your Vault</div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+
+  <footer class="site-footer">MONSTERDEX — a personal tasting log · not affiliated with Monster Energy Company</footer>
+
+  <!-- Add/Edit Modal -->
+  <div class="overlay" id="formOverlay">
+    <div class="modal">
+      <button class="modal-close" data-close>&times;</button>
+      <h2 id="formTitle">Add a New Can</h2>
+      <form id="drinkForm">
+        <div class="field-group">
+          <label for="nameInput">Flavor name</label>
+          <input class="field" type="text" id="nameInput" list="flavorSuggestions" placeholder="e.g. Ultra Watermelon" required>
+          <datalist id="flavorSuggestions"></datalist>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="seriesInput">Series / line</label>
+            <select class="select" id="seriesInput"></select>
+          </div>
+          <div class="field-group">
+            <label for="sizeInput">Can size</label>
+            <select class="select" id="sizeInput"></select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Photo</label>
+          <div class="image-drop" id="imageDrop">
+            <div id="imagePreviewWrap">📷 Tap to add a photo (or take one)</div>
+            <input type="file" id="imageInput" accept="image/*">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Overall rating <span style="color:var(--dust); font-weight:400; text-transform:none;">(out of 7 claws)</span></label>
+          <div class="claw-rating" id="ratingWidget"></div>
+        </div>
+
+        <div class="field-group">
+          <label>Taste profile</label>
+          <div id="tasteSliders"></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="priceInput">Price paid (₹)</label>
+            <input class="field" type="number" id="priceInput" min="0" step="0.01" placeholder="0.00" required>
+          </div>
+          <div class="field-group">
+            <label for="cansInput">Cans had</label>
+            <div class="stepper">
+              <button type="button" id="cansMinus">−</button>
+              <input class="field" type="number" id="cansInput" min="1" value="1">
+              <button type="button" id="cansPlus">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="dateInput">Date first tried</label>
+            <input class="field" type="date" id="dateInput">
+          </div>
+          <div class="field-group">
+            <label for="locationInput">Where you bought it <span style="color:var(--dust); font-weight:400; text-transform:none;">(optional)</span></label>
+            <input class="field" type="text" id="locationInput" placeholder="e.g. corner gas station">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Would you buy it again?</label>
+            <div class="toggle-switch on" id="buyAgainToggle"><div class="track"></div><span id="buyAgainLabel">Yes</span></div>
+          </div>
+          <div class="field-group">
+            <label>Limited edition drop?</label>
+            <div class="toggle-switch" id="limitedToggle"><div class="track"></div><span id="limitedLabel">No</span></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="notesInput">Tasting notes <span style="color:var(--dust); font-weight:400; text-transform:none;">(optional)</span></label>
+          <textarea class="field" id="notesInput" placeholder="What did it remind you of? Any thoughts on the aftertaste?"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">Lock It In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="overlay" id="detailOverlay">
+    <div class="modal" id="detailModalContent"></div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ===================== CONSTANTS ===================== */
+
+  const SERIES = [
+    {id:'original', label:'Original', color:'#ff2438'},
+    {id:'ultra',    label:'Ultra',    color:'#d8dade'},
+    {id:'juice',    label:'Juice Monster', color:'#ff4d6d'},
+    {id:'rehab',    label:'Rehab',    color:'#d7a84e'},
+    {id:'nitro',    label:'Nitro',    color:'#7c8591'},
+    {id:'java',     label:'Java Monster', color:'#a9713f'},
+    {id:'reserve',  label:'Reserve',  color:'#d64d68'},
+    {id:'other',    label:'Other',    color:'#a3a3ab'},
+  ];
+
+  const FLAVOR_SUGGESTIONS = [
+    'Original','Zero Ultra','Ultra Watermelon','Ultra Rosé','Ultra Sunrise','Ultra Fiesta',
+    'Ultra Paradise','Ultra Violet','Ultra Gold','Ultra Peachy Keen','Ultra Fantasy Ruby Red','Ultra Black',
+    'Mango Loco','Pipeline Punch','Pacific Punch','Khaotic','Aussie Style Lemonade',
+    'Rehab Tea + Lemonade','Rehab Peach Tea','Rehab Raspberry Tea',
+    'Nitro Cosmic Peach','Nitro Super Dry','Assault','Ripper',
+    'Reserve Cantaloupe','Reserve White Pear','Reserve Orange Dreamsicle','Reserve Blue Hawaiian',
+    'Java Monster Mean Bean','Java Monster Salted Caramel','Dragon Tea'
+  ];
+
+  const TASTE_AXES = [
+    {id:'sweetness',  label:'Sweetness',   abbr:'SWEET'},
+    {id:'tang',       label:'Tanginess',   abbr:'TANG'},
+    {id:'bitterness', label:'Bitterness',  abbr:'BITTER'},
+    {id:'fruitiness', label:'Fruitiness',  abbr:'FRUIT'},
+    {id:'fizz',       label:'Carbonation', abbr:'FIZZ'},
+    {id:'smoothness', label:'Smoothness',  abbr:'SMOOTH'},
+  ];
+
+  // Canonical sizes stored by id so the display label can flip between oz/ml.
+  const CAN_SIZES = [
+    {id:'444', ozLabel:'15 oz Can (Java Monster)', mlLabel:'444 ml Can (Java Monster)'},
+    {id:'458', ozLabel:'15.5 oz Can (Ultra)',    mlLabel:'458 ml Can (Ultra)'},
+    {id:'473', ozLabel:'16 oz Can',              mlLabel:'473 ml Can'},
+    {id:'500', ozLabel:'16.9 oz Can',            mlLabel:'500 ml Can'},
+    {id:'550', ozLabel:'18.6 oz Import Can',     mlLabel:'550 ml Import Can'},
+    {id:'other', ozLabel:'Other / unknown',      mlLabel:'Other / unknown'},
+  ];
+
+  const ACHIEVEMENT_DEFS = [
+    {id:'first',    icon:'🥫', title:'First Crack',        desc:'Log your first can', check: s => s.count >= 1},
+    {id:'explorer', icon:'🧭', title:'Taste Explorer',      desc:'Log 5 different flavors', check: s => s.count >= 5},
+    {id:'connoisseur', icon:'🎖️', title:'Connoisseur',      desc:'Log 15 different flavors', check: s => s.count >= 15},
+    {id:'fullvault', icon:'🏆', title:'Full Vault',         desc:'Log 25 different flavors', check: s => s.count >= 25},
+    {id:'crusher',  icon:'💥', title:'Can Crusher',         desc:'20+ total cans logged', check: s => s.totalCans >= 20},
+    {id:'spender',  icon:'💸', title:'Big Spender',         desc:'₹2,000+ spent total', check: s => s.totalSpent >= 2000},
+    {id:'perfect',  icon:'⭐', title:'Perfect Seven',       desc:'Rate a can 7/7', check: s => s.hasPerfect},
+    {id:'loyal',    icon:'❤️', title:'Loyal Fan',           desc:'10+ cans of one flavor', check: s => s.hasLoyal},
+    {id:'limited',  icon:'🌈', title:'Limited Drop',        desc:'Log a limited-edition can', check: s => s.limitedCount >= 1},
+    {id:'curator',  icon:'📌', title:'Curator',             desc:'Pin 3 favorites', check: s => s.favCount >= 3},
+  ];
+
+  const STORAGE_KEY = 'monsterdex_data_v1';
+  const UNIT_KEY = 'monsterdex_unit_v1';
+
+  /* ===================== STORAGE ===================== */
+
+  let memoryFallback = [];
+  let usingFallback = false;
+
+  const Store = {
+    load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const test = '__monsterdex_test__';
+        localStorage.setItem(test, '1');
+        localStorage.removeItem(test);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){
+        usingFallback = true;
+        return memoryFallback;
+      }
+    },
+    save(data){
+      if(usingFallback){
+        memoryFallback = data;
+        return false;
+      }
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        return true;
+      }catch(e){
+        usingFallback = true;
+        memoryFallback = data;
+        return false;
+      }
+    }
+  };
+
+  /* ===================== STATE ===================== */
+
+  let drinks = Store.load() || [];
+  let searchTerm = '';
+  let activeSeries = 'all';
+  let sortMode = 'newest';
+  let showFavoritesOnly = false;
+
+  let unit = 'ml';
+  try{
+    const savedUnit = localStorage.getItem(UNIT_KEY);
+    if(savedUnit === 'oz' || savedUnit === 'ml') unit = savedUnit;
+  }catch(e){ /* fall back to default ml */ }
+
+  // form state
+  let formMode = 'add';
+  let formEditingId = null;
+  let formRating = 0;
+  let formImageData = null;
+  let formTaste = {};
+
+  /* ===================== UTILITIES ===================== */
+
+  function uid(){
+    return 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  function escapeHTML(str){
+    if(str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function money(n){
+    n = Number(n) || 0;
+    return '₹' + n.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function todayISO(){
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function seriesInfo(id){
+    return SERIES.find(s => s.id === id) || SERIES[SERIES.length-1];
+  }
+
+  function sizeLabel(id){
+    const s = CAN_SIZES.find(x => x.id === id);
+    if(!s) return id || '—'; // graceful fallback for old/imported data
+    return unit === 'oz' ? s.ozLabel : s.mlLabel;
+  }
+
+  function tasteArray(taste){
+    return TASTE_AXES.map(a => Number(taste && taste[a.id] != null ? taste[a.id] : 0));
+  }
+
+  function clawSVG(size, filled){
+    const c = filled ? 'filled' : '';
+    return `<svg class="${c}" width="${size}" height="${Math.round(size*1.3)}" viewBox="0 0 24 32">
+      <path d="M2 30 L7 2" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M9 30 L14 2" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M16 30 L21 2" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </svg>`;
+  }
+
+  function clawRowStatic(rating, size){
+    size = size || 15;
+    let html = '<div class="claw-rating static">';
+    for(let i=1;i<=7;i++){
+      html += `<span>${clawSVG(size, i <= rating)}</span>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function placeholderClawSVG(){
+    return `<svg viewBox="0 0 24 32" class="placeholder-claw"><path d="M2 30 L7 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M9 30 L14 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 30 L21 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`;
+  }
+
+  function cornerClawSVG(){
+    return `<svg class="corner-claw" viewBox="0 0 24 32"><path d="M2 30 L7 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M9 30 L14 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 30 L21 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`;
+  }
+
+  /* ---- Radar chart ---- */
+  function radarSVG(values, opts){
+    opts = opts || {};
+    const size = opts.size || 180;
+    const showLabels = opts.showLabels !== false;
+    const colorHex = opts.colorHex || '#ff2438';
+    const cx = size/2, cy = size/2;
+    const labelPad = showLabels ? 26 : 0;
+    const maxR = size/2 - 14 - labelPad;
+    const n = TASTE_AXES.length;
+
+    function pt(i, frac){
+      const angle = (Math.PI*2*i/n) - Math.PI/2;
+      const r = frac * maxR;
+      return [cx + r*Math.cos(angle), cy + r*Math.sin(angle)];
+    }
+
+    // grid rings
+    let gridHTML = '';
+    [0.25,0.5,0.75,1].forEach(frac => {
+      let pts = [];
+      for(let i=0;i<n;i++){ pts.push(pt(i, frac).join(',')); }
+      gridHTML += `<polygon points="${pts.join(' ')}" fill="none" stroke="#333338" stroke-width="1"/>`;
+    });
+    // axis lines
+    let axisHTML = '';
+    for(let i=0;i<n;i++){
+      const [x,y] = pt(i,1);
+      axisHTML += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#333338" stroke-width="1"/>`;
+    }
+    // data polygon
+    let dataPts = [];
+    for(let i=0;i<n;i++){
+      const frac = Math.max(0, Math.min(10, values[i]||0)) / 10;
+      dataPts.push(pt(i, frac));
+    }
+    const dataPointsStr = dataPts.map(p => p.join(',')).join(' ');
+    let dotsHTML = dataPts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${colorHex}"/>`).join('');
+
+    // labels
+    let labelHTML = '';
+    if(showLabels){
+      for(let i=0;i<n;i++){
+        const [x,y] = pt(i, 1.22);
+        let anchor = 'middle';
+        if(x < cx - 4) anchor = 'end';
+        else if(x > cx + 4) anchor = 'start';
+        let dy = 4;
+        if(y < cy - 4) dy = -2;
+        else if(y > cy + 4) dy = 10;
+        labelHTML += `<text x="${x}" y="${y}" dy="${dy}" text-anchor="${anchor}" font-family="JetBrains Mono, monospace" font-size="9" fill="#9b9ba3">${TASTE_AXES[i].abbr}</text>`;
+      }
+    }
+
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      ${gridHTML}${axisHTML}
+      <polygon points="${dataPointsStr}" fill="${colorHex}" fill-opacity="0.22" stroke="${colorHex}" stroke-width="2"/>
+      ${dotsHTML}
+      ${labelHTML}
+    </svg>`;
+  }
+
+  /* ===================== STATS / ACHIEVEMENTS ===================== */
+
+  function computeStats(){
+    const count = drinks.length;
+    const totalCans = drinks.reduce((s,d) => s + (Number(d.cans)||0), 0);
+    const totalSpent = drinks.reduce((s,d) => s + (Number(d.price)||0) * (Number(d.cans)||0), 0);
+    const rated = drinks.filter(d => d.rating > 0);
+    const avgRating = rated.length ? (rated.reduce((s,d)=>s+d.rating,0) / rated.length) : 0;
+    const hasPerfect = drinks.some(d => d.rating === 7);
+    const hasLoyal = drinks.some(d => Number(d.cans) >= 10);
+    const limitedCount = drinks.filter(d => d.limited).length;
+    const favCount = drinks.filter(d => d.favorite).length;
+    const collectibleSeries = SERIES.filter(s => s.id !== 'other');
+    const seriesCollected = new Set(drinks.map(d => d.series).filter(id => id !== 'other')).size;
+    let top = null;
+    rated.forEach(d => { if(!top || d.rating > top.rating) top = d; });
+    return {count, totalCans, totalSpent, avgRating, hasPerfect, hasLoyal, limitedCount, favCount, seriesCollected, seriesTotal: collectibleSeries.length, top};
+  }
+
+  function renderStats(){
+    const s = computeStats();
+    const strip = document.getElementById('statStrip');
+    strip.innerHTML = `
+      <div class="stat"><b>${s.count}</b><span>Flavors Tried</span></div>
+      <div class="stat"><b>${s.totalCans}</b><span>Total Cans</span></div>
+      <div class="stat"><b>${money(s.totalSpent)}</b><span>Total Spent</span></div>
+      <div class="stat"><b>${s.avgRating ? s.avgRating.toFixed(1) : '—'}/7</b><span>Avg Rating</span></div>
+      <div class="stat"><b>${s.seriesCollected}/${s.seriesTotal}</b><span>Series Collected</span></div>
+    `;
+  }
+
+  function renderAchievements(){
+    const s = computeStats();
+    const row = document.getElementById('achievementsRow');
+    row.innerHTML = ACHIEVEMENT_DEFS.map(a => {
+      const earned = a.check(s);
+      return `<div class="badge ${earned?'earned':''}" title="${escapeHTML(a.desc)}">
+        <span class="icon">${a.icon}</span>
+        <span class="txt"><b>${escapeHTML(a.title)}</b><small>${escapeHTML(a.desc)}</small></span>
+      </div>`;
+    }).join('');
+  }
+
+  function renderSeriesBreakdown(){
+    const el = document.getElementById('seriesBreakdown');
+    if(drinks.length === 0){
+      el.innerHTML = `<p class="breakdown-empty">Log a can to see your series breakdown.</p>`;
+      return;
+    }
+    const counts = SERIES.map(s => ({
+      s,
+      n: drinks.filter(d => d.series === s.id).length
+    })).filter(x => x.n > 0).sort((a,b) => b.n - a.n);
+    const max = Math.max(...counts.map(x => x.n), 1);
+    el.innerHTML = counts.map(({s,n}) => `
+      <div class="series-bar-row">
+        <span class="series-bar-label">${escapeHTML(s.label)}</span>
+        <div class="series-bar-track"><div class="series-bar-fill" style="width:${(n/max*100).toFixed(0)}%; background:${s.color}"></div></div>
+        <span class="series-bar-count">${n}</span>
+      </div>
+    `).join('');
+  }
+
+  /* ===================== FILTER ROW ===================== */
+
+  function renderFilterRow(){
+    const row = document.getElementById('filterRow');
+    const chips = [{id:'all', label:'All'}].concat(SERIES);
+    row.innerHTML = chips.map(c => `<button class="chip ${activeSeries===c.id?'active':''}" data-series="${c.id}">${escapeHTML(c.label)}</button>`).join('');
+    row.querySelectorAll('.chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeSeries = btn.getAttribute('data-series');
+        renderFilterRow();
+        renderGallery();
+      });
+    });
+  }
+
+  /* ===================== GALLERY ===================== */
+
+  function getFilteredSorted(){
+    let list = drinks.slice();
+    if(searchTerm.trim()){
+      const t = searchTerm.trim().toLowerCase();
+      list = list.filter(d => d.name.toLowerCase().includes(t));
+    }
+    if(activeSeries !== 'all'){
+      list = list.filter(d => d.series === activeSeries);
+    }
+    if(showFavoritesOnly){
+      list = list.filter(d => d.favorite);
+    }
+    switch(sortMode){
+      case 'newest': list.sort((a,b) => b.dateAdded - a.dateAdded); break;
+      case 'oldest': list.sort((a,b) => a.dateAdded - b.dateAdded); break;
+      case 'rating_desc': list.sort((a,b) => b.rating - a.rating); break;
+      case 'rating_asc': list.sort((a,b) => a.rating - b.rating); break;
+      case 'cans_desc': list.sort((a,b) => b.cans - a.cans); break;
+      case 'price_desc': list.sort((a,b) => b.price - a.price); break;
+      case 'price_asc': list.sort((a,b) => a.price - b.price); break;
+      case 'name_asc': list.sort((a,b) => a.name.localeCompare(b.name)); break;
+    }
+    // Favorites float to the top, keeping the chosen sort order within each group.
+    list.sort((a,b) => (b.favorite?1:0) - (a.favorite?1:0));
+    return list;
+  }
+
+  function renderGallery(){
+    const gallery = document.getElementById('gallery');
+    const list = getFilteredSorted();
+
+    if(drinks.length === 0){
+      gallery.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <svg viewBox="0 0 24 32"><path d="M2 30 L7 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M9 30 L14 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 30 L21 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>
+        <h3>Your vault is empty</h3>
+        <p>Crack open your first can and log it — taste profile, rating, photo, all of it.</p>
+      </div>`;
+      return;
+    }
+    if(list.length === 0){
+      gallery.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <h3>No matches</h3>
+        <p>Nothing in your vault matches that search or filter.</p>
+      </div>`;
+      return;
+    }
+
+    gallery.innerHTML = list.map((d, idx) => {
+      const si = seriesInfo(d.series);
+      const media = d.image
+        ? `<img src="${d.image}" alt="${escapeHTML(d.name)}">`
+        : placeholderClawSVG();
+      return `<article class="card" data-id="${d.id}" style="animation-delay:${Math.min(idx,10)*40}ms">
+        <div class="card-media" data-open="${d.id}">
+          ${media}
+          <span class="series-tag" style="--tag-color:${si.color}">${escapeHTML(si.label)}</span>
+          ${cornerClawSVG()}
+          ${d.limited ? `<span class="ltd-ribbon holo-fill">Limited</span>` : ''}
+        </div>
+        <div class="card-body" data-open="${d.id}">
+          <h3 class="card-name">${escapeHTML(d.name)}</h3>
+          ${clawRowStatic(d.rating, 12)}
+          <div class="card-stats-row">
+            <span class="stat-price">${money(d.price)}</span>
+            <span class="stat-cans">× ${d.cans} can${d.cans===1?'':'s'}</span>
+          </div>
+          <div class="card-radar-mini">${radarSVG(tasteArray(d.taste), {size:100, showLabels:false, colorHex: si.color})}</div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn pin-btn ${d.favorite?'active':''}" data-id="${d.id}" title="${d.favorite?'Remove from favorites':'Add to favorites'}" aria-label="Toggle favorite">${d.favorite?'★':'☆'}</button>
+          <div class="action-group">
+            <button class="icon-btn edit-btn" data-id="${d.id}" title="Edit" aria-label="Edit">✏️</button>
+            <button class="icon-btn delete-btn" data-id="${d.id}" title="Delete" aria-label="Delete">🗑️</button>
+          </div>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  /* ===================== TOASTS ===================== */
+
+  function showToast(msg, type){
+    const stack = document.getElementById('toastStack');
+    const el = document.createElement('div');
+    el.className = 'toast' + (type==='danger' ? ' danger' : '');
+    el.textContent = msg;
+    stack.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'toastOut .25s ease-in forwards';
+      setTimeout(() => el.remove(), 260);
+    }, 2600);
+  }
+
+  /* ===================== PERSIST + RENDER ALL ===================== */
+
+  function persist(){
+    const ok = Store.save(drinks);
+    document.getElementById('storageBanner').classList.toggle('show', !ok);
+  }
+
+  function renderAll(){
+    renderStats();
+    renderAchievements();
+    renderSeriesBreakdown();
+    renderGallery();
+  }
+
+  /* ===================== FAVORITES ===================== */
+
+  function toggleFavorite(id){
+    const d = drinks.find(x => x.id === id);
+    if(!d) return;
+    d.favorite = !d.favorite;
+    persist();
+    renderAll();
+    showToast(d.favorite ? '★ Added ' + d.name + ' to favorites.' : 'Removed ' + d.name + ' from favorites.');
+  }
+
+  /* ===================== FORM: RATING WIDGET ===================== */
+
+  function renderRatingWidget(){
+    const el = document.getElementById('ratingWidget');
+    el.innerHTML = '';
+    for(let i=1;i<=7;i++){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('data-value', i);
+      btn.innerHTML = clawSVG(20, i <= formRating);
+      el.appendChild(btn);
+    }
+  }
+
+  function bindRatingWidget(){
+    const el = document.getElementById('ratingWidget');
+    el.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const v = Number(btn.getAttribute('data-value'));
+      formRating = (formRating === v) ? 0 : v; // click same value again to clear
+      renderRatingWidget();
+    });
+    el.addEventListener('mouseover', (e) => {
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const v = Number(btn.getAttribute('data-value'));
+      [...el.children].forEach((child, idx) => {
+        child.querySelector('svg').classList.toggle('filled', idx < v);
+      });
+    });
+    el.addEventListener('mouseleave', () => renderRatingWidget());
+  }
+
+  /* ===================== FORM: TASTE SLIDERS ===================== */
+
+  function renderTasteSliders(){
+    const wrap = document.getElementById('tasteSliders');
+    wrap.innerHTML = TASTE_AXES.map(a => `
+      <div class="field-group">
+        <label for="slider_${a.id}">${a.label}</label>
+        <div class="slider-row">
+          <input type="range" id="slider_${a.id}" min="0" max="10" step="1" value="${formTaste[a.id] ?? 5}">
+          <span class="val" id="val_${a.id}">${formTaste[a.id] ?? 5}</span>
+        </div>
+      </div>
+    `).join('');
+    TASTE_AXES.forEach(a => {
+      const input = document.getElementById('slider_' + a.id);
+      const val = document.getElementById('val_' + a.id);
+      input.addEventListener('input', () => {
+        formTaste[a.id] = Number(input.value);
+        val.textContent = input.value;
+      });
+    });
+  }
+
+  /* ===================== FORM: IMAGE ===================== */
+
+  function compressImage(file, maxDim, quality){
+    maxDim = maxDim || 640;
+    quality = quality || 0.75;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else if(h >= w && h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateImagePreview(){
+    const wrap = document.getElementById('imagePreviewWrap');
+    if(formImageData){
+      wrap.innerHTML = `<img src="${formImageData}" alt="preview">`;
+    }else{
+      wrap.innerHTML = '📷 Tap to add a photo (or take one)';
+    }
+  }
+
+  function bindImageInput(){
+    const input = document.getElementById('imageInput');
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0];
+      if(!file) return;
+      try{
+        formImageData = await compressImage(file);
+        updateImagePreview();
+      }catch(err){
+        showToast('Could not read that image — try another one.', 'danger');
+      }
+    });
+  }
+
+  /* ===================== FORM: STEPPER + TOGGLE ===================== */
+
+  function bindStepper(){
+    const input = document.getElementById('cansInput');
+    document.getElementById('cansMinus').addEventListener('click', () => {
+      input.value = Math.max(1, (Number(input.value)||1) - 1);
+    });
+    document.getElementById('cansPlus').addEventListener('click', () => {
+      input.value = (Number(input.value)||1) + 1;
+    });
+  }
+
+  function bindBuyAgainToggle(){
+    const toggle = document.getElementById('buyAgainToggle');
+    toggle.addEventListener('click', () => {
+      const on = toggle.classList.toggle('on');
+      document.getElementById('buyAgainLabel').textContent = on ? 'Yes' : 'No';
+    });
+  }
+
+  function bindLimitedToggle(){
+    const toggle = document.getElementById('limitedToggle');
+    toggle.addEventListener('click', () => {
+      const on = toggle.classList.toggle('on');
+      document.getElementById('limitedLabel').textContent = on ? 'Yes' : 'No';
+    });
+  }
+
+  /* ===================== FORM: SERIES / SUGGESTIONS SETUP ===================== */
+
+  function populateSizeOptions(){
+    const sel = document.getElementById('sizeInput');
+    const prev = sel.value;
+    sel.innerHTML = CAN_SIZES.map(s => `<option value="${s.id}">${escapeHTML(sizeLabel(s.id))}</option>`).join('');
+    if(prev && CAN_SIZES.some(s => s.id === prev)) sel.value = prev;
+  }
+
+  function populateStaticFormBits(){
+    const seriesSelect = document.getElementById('seriesInput');
+    seriesSelect.innerHTML = SERIES.map(s => `<option value="${s.id}">${escapeHTML(s.label)}</option>`).join('');
+    const datalist = document.getElementById('flavorSuggestions');
+    datalist.innerHTML = FLAVOR_SUGGESTIONS.map(f => `<option value="${escapeHTML(f)}">`).join('');
+    populateSizeOptions();
+  }
+
+  /* ===================== MODAL: ADD / EDIT ===================== */
+
+  function openAddModal(){
+    formMode = 'add';
+    formEditingId = null;
+    formRating = 0;
+    formImageData = null;
+    formTaste = {};
+    TASTE_AXES.forEach(a => formTaste[a.id] = 5);
+
+    document.getElementById('formTitle').textContent = 'Add a New Can';
+    document.getElementById('submitBtn').textContent = 'Lock It In';
+    document.getElementById('nameInput').value = '';
+    document.getElementById('seriesInput').value = 'original';
+    populateSizeOptions();
+    document.getElementById('sizeInput').value = '473';
+    document.getElementById('priceInput').value = '';
+    document.getElementById('cansInput').value = 1;
+    document.getElementById('dateInput').value = todayISO();
+    document.getElementById('locationInput').value = '';
+    document.getElementById('notesInput').value = '';
+    document.getElementById('buyAgainToggle').classList.add('on');
+    document.getElementById('buyAgainLabel').textContent = 'Yes';
+    document.getElementById('limitedToggle').classList.remove('on');
+    document.getElementById('limitedLabel').textContent = 'No';
+
+    renderRatingWidget();
+    renderTasteSliders();
+    updateImagePreview();
+
+    document.getElementById('formOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('nameInput').focus(), 50);
+  }
+
+  function openEditModal(id){
+    const d = drinks.find(x => x.id === id);
+    if(!d) return;
+    formMode = 'edit';
+    formEditingId = id;
+    formRating = d.rating;
+    formImageData = d.image;
+    formTaste = Object.assign({}, d.taste);
+
+    document.getElementById('formTitle').textContent = 'Edit ' + d.name;
+    document.getElementById('submitBtn').textContent = 'Save Changes';
+    document.getElementById('nameInput').value = d.name;
+    document.getElementById('seriesInput').value = d.series;
+    populateSizeOptions();
+    document.getElementById('sizeInput').value = d.size;
+    document.getElementById('priceInput').value = d.price;
+    document.getElementById('cansInput').value = d.cans;
+    document.getElementById('dateInput').value = d.dateTried;
+    document.getElementById('locationInput').value = d.location || '';
+    document.getElementById('notesInput').value = d.notes || '';
+    const toggle = document.getElementById('buyAgainToggle');
+    toggle.classList.toggle('on', !!d.wouldBuyAgain);
+    document.getElementById('buyAgainLabel').textContent = d.wouldBuyAgain ? 'Yes' : 'No';
+    const limToggle = document.getElementById('limitedToggle');
+    limToggle.classList.toggle('on', !!d.limited);
+    document.getElementById('limitedLabel').textContent = d.limited ? 'Yes' : 'No';
+
+    renderRatingWidget();
+    renderTasteSliders();
+    updateImagePreview();
+
+    document.getElementById('formOverlay').classList.add('open');
+  }
+
+  function closeFormModal(){
+    document.getElementById('formOverlay').classList.remove('open');
+  }
+
+  function handleFormSubmit(e){
+    e.preventDefault();
+    const name = document.getElementById('nameInput').value.trim();
+    if(!name){ showToast('Give it a name first.', 'danger'); return; }
+
+    if(formMode === 'add'){
+      const dup = drinks.find(d => d.name.toLowerCase() === name.toLowerCase());
+      if(dup){
+        const again = confirm(`You already have "${dup.name}" logged (${dup.cans} can${dup.cans===1?'':'s'} so far). Add this as a separate entry anyway?`);
+        if(!again) return;
+      }
+    }
+
+    const drinkData = {
+      name,
+      series: document.getElementById('seriesInput').value,
+      size: document.getElementById('sizeInput').value,
+      rating: formRating,
+      taste: Object.assign({}, formTaste),
+      price: Number(document.getElementById('priceInput').value) || 0,
+      cans: Math.max(1, Number(document.getElementById('cansInput').value) || 1),
+      dateTried: document.getElementById('dateInput').value || todayISO(),
+      location: document.getElementById('locationInput').value.trim(),
+      wouldBuyAgain: document.getElementById('buyAgainToggle').classList.contains('on'),
+      limited: document.getElementById('limitedToggle').classList.contains('on'),
+      notes: document.getElementById('notesInput').value.trim(),
+      image: formImageData,
+    };
+
+    if(formMode === 'edit' && formEditingId){
+      const d = drinks.find(x => x.id === formEditingId);
+      Object.assign(d, drinkData);
+      showToast('✅ Updated ' + name + '.');
+    }else{
+      drinkData.id = uid();
+      drinkData.dateAdded = Date.now();
+      drinkData.favorite = false;
+      drinks.push(drinkData);
+      showToast('🔺 Cracked open: ' + name + ' added to your vault!');
+    }
+
+    persist();
+    renderAll();
+    renderFilterRow();
+    closeFormModal();
+  }
+
+  /* ===================== MODAL: DETAIL ===================== */
+
+  function openDetailModal(id){
+    const d = drinks.find(x => x.id === id);
+    if(!d) return;
+    const si = seriesInfo(d.series);
+    const media = d.image
+      ? `<img src="${d.image}" alt="${escapeHTML(d.name)}">`
+      : `<svg viewBox="0 0 24 32"><path d="M2 30 L7 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M9 30 L14 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 30 L21 2" stroke="#ff2438" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`;
+
+    document.getElementById('detailModalContent').innerHTML = `
+      <button class="modal-close" data-close>&times;</button>
+      <div class="detail-head">
+        <div class="detail-media">${media}${d.limited ? `<span class="ltd-ribbon holo-fill">Limited</span>` : ''}</div>
+        <div class="detail-info">
+          <span class="series-tag" style="--tag-color:${si.color}; position:static; display:inline-block; margin-bottom:8px;">${escapeHTML(si.label)}</span>
+          ${d.limited ? `<span class="holo-pill holo-fill">✨ Limited</span>` : ''}
+          <h2>${escapeHTML(d.name)}</h2>
+          ${clawRowStatic(d.rating, 16)}
+        </div>
+      </div>
+      <div class="detail-stat-grid">
+        <div><b>${money(d.price)}</b><span>Price per can</span></div>
+        <div><b>${d.cans}</b><span>Cans had</span></div>
+        <div><b>${money(d.price * d.cans)}</b><span>Total spent</span></div>
+        ${d.rating > 0 ? `<div><b>${money(d.price / d.rating)}</b><span>Value (₹/claw)</span></div>` : ''}
+        <div><b>${d.dateTried || '—'}</b><span>Date tried</span></div>
+        <div><b>${escapeHTML(sizeLabel(d.size))}</b><span>Can size</span></div>
+        <div><b>${d.wouldBuyAgain ? 'Yes 👍' : 'No 👎'}</b><span>Buy again?</span></div>
+        ${d.location ? `<div><b>${escapeHTML(d.location)}</b><span>Bought at</span></div>` : ''}
+      </div>
+      <div class="detail-radar">${radarSVG(tasteArray(d.taste), {size:220, showLabels:true, colorHex: si.color})}</div>
+      ${d.notes ? `<div class="detail-notes">${escapeHTML(d.notes)}</div>` : ''}
+      <div class="detail-actions">
+        <button class="btn btn-danger" id="detailDeleteBtn">🗑 Delete</button>
+        <button class="btn btn-ghost" id="detailFavBtn">${d.favorite ? '★ Favorited' : '☆ Favorite'}</button>
+        <button class="btn btn-primary" id="detailEditBtn">✏️ Edit</button>
+      </div>
+    `;
+    document.getElementById('detailEditBtn').addEventListener('click', () => {
+      closeDetailModal();
+      openEditModal(d.id);
+    });
+    document.getElementById('detailDeleteBtn').addEventListener('click', () => {
+      deleteDrink(d.id);
+      closeDetailModal();
+    });
+    document.getElementById('detailFavBtn').addEventListener('click', () => {
+      toggleFavorite(d.id);
+      openDetailModal(d.id);
+    });
+    document.getElementById('detailOverlay').classList.add('open');
+  }
+
+  function closeDetailModal(){
+    document.getElementById('detailOverlay').classList.remove('open');
+  }
+
+  /* ===================== DELETE ===================== */
+
+  function deleteDrink(id){
+    const d = drinks.find(x => x.id === id);
+    if(!d) return;
+    if(!confirm(`Remove "${d.name}" from your vault? This can't be undone.`)) return;
+    drinks = drinks.filter(x => x.id !== id);
+    persist();
+    renderAll();
+    renderFilterRow();
+    showToast('Removed ' + d.name + ' from the vault.', 'danger');
+  }
+
+  /* ===================== EXPORT / IMPORT / RESET ===================== */
+
+  function exportJSON(){
+    const blob = new Blob([JSON.stringify(drinks, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'monsterdex-backup-' + todayISO() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('⬇ Vault exported to a JSON file.');
+  }
+
+  function csvField(v){
+    const s = (v === null || v === undefined) ? '' : String(v);
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  function exportCSV(){
+    const headers = ['Name','Series','Size','Rating (of 7)','Price per can (INR)','Cans had','Total spent (INR)','Date tried','Location','Would buy again','Limited edition','Favorite','Notes'];
+    const rows = drinks.map(d => [
+      d.name,
+      seriesInfo(d.series).label,
+      sizeLabel(d.size),
+      d.rating,
+      (Number(d.price)||0).toFixed(2),
+      d.cans,
+      ((Number(d.price)||0) * (Number(d.cans)||0)).toFixed(2),
+      d.dateTried || '',
+      d.location || '',
+      d.wouldBuyAgain ? 'Yes' : 'No',
+      d.limited ? 'Yes' : 'No',
+      d.favorite ? 'Yes' : 'No',
+      d.notes || '',
+    ]);
+    const csv = [headers].concat(rows).map(row => row.map(csvField).join(',')).join('\r\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'monsterdex-export-' + todayISO() + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('⬇ Vault exported to a CSV file.');
+  }
+
+  function importData(file){
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const parsed = JSON.parse(e.target.result);
+        if(!Array.isArray(parsed)) throw new Error('bad format');
+        const incoming = parsed.map(d => Object.assign({}, d, {
+          id: uid(),
+          dateAdded: d.dateAdded || Date.now(),
+        }));
+        if(!confirm(`Import ${incoming.length} drink(s) into your vault? They'll be added alongside what's already there.`)) return;
+        drinks = drinks.concat(incoming);
+        persist();
+        renderAll();
+        renderFilterRow();
+        showToast(`⬆ Imported ${incoming.length} drink(s).`);
+      }catch(err){
+        showToast('That file didn\'t look like a MonsterDex export.', 'danger');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function resetAll(){
+    if(!confirm('This will permanently delete every can in your vault. Are you sure?')) return;
+    if(!confirm('Really sure? This cannot be undone.')) return;
+    drinks = [];
+    persist();
+    renderAll();
+    renderFilterRow();
+    showToast('Vault cleared.', 'danger');
+  }
+
+  /* ===================== SURPRISE ME ===================== */
+
+  function surpriseMe(){
+    if(drinks.length === 0){
+      const pick = FLAVOR_SUGGESTIONS[Math.floor(Math.random()*FLAVOR_SUGGESTIONS.length)];
+      showToast(`🎲 Try "${pick}" first! Your vault is empty so far.`);
+      return;
+    }
+    const untried = FLAVOR_SUGGESTIONS.filter(f =>
+      !drinks.some(d => d.name.toLowerCase() === f.toLowerCase())
+    );
+    const goNew = untried.length > 0 && Math.random() < 0.5;
+    if(goNew){
+      const pick = untried[Math.floor(Math.random()*untried.length)];
+      showToast(`🎲 New adventure: try "${pick}" next!`);
+    }else{
+      const pick = drinks[Math.floor(Math.random()*drinks.length)];
+      const ratingTxt = pick.rating ? ` — you rated it ${pick.rating}/7` : '';
+      showToast(`🎲 Rewind: crack open another ${pick.name}${ratingTxt}!`);
+    }
+  }
+
+  /* ===================== INIT / BIND ===================== */
+
+  function bindGlobalEvents(){
+    document.getElementById('addBtn').addEventListener('click', openAddModal);
+    document.getElementById('surpriseBtn').addEventListener('click', surpriseMe);
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      renderGallery();
+    });
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+      sortMode = e.target.value;
+      renderGallery();
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if(file) importData(file);
+      e.target.value = '';
+    });
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+    document.querySelectorAll('.unit-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => setUnit(btn.getAttribute('data-unit')));
+    });
+
+    document.getElementById('favToggleBtn').addEventListener('click', () => {
+      showFavoritesOnly = !showFavoritesOnly;
+      const btn = document.getElementById('favToggleBtn');
+      btn.classList.toggle('active', showFavoritesOnly);
+      btn.textContent = (showFavoritesOnly ? '★' : '☆') + ' Favorites';
+      renderGallery();
+    });
+
+    document.getElementById('drinkForm').addEventListener('submit', handleFormSubmit);
+
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        closeFormModal();
+        closeDetailModal();
+      });
+    });
+    document.getElementById('formOverlay').addEventListener('click', (e) => {
+      if(e.target.id === 'formOverlay') closeFormModal();
+    });
+    document.getElementById('detailOverlay').addEventListener('click', (e) => {
+      if(e.target.id === 'detailOverlay') closeDetailModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape'){ closeFormModal(); closeDetailModal(); return; }
+
+      const typing = ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName);
+      const modalOpen = document.getElementById('formOverlay').classList.contains('open')
+        || document.getElementById('detailOverlay').classList.contains('open');
+      if(typing || modalOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if(e.key === '/'){ e.preventDefault(); document.getElementById('searchInput').focus(); }
+      else if(e.key === 'n' || e.key === 'N'){ e.preventDefault(); openAddModal(); }
+    });
+
+    document.getElementById('gallery').addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.edit-btn');
+      if(editBtn){ openEditModal(editBtn.getAttribute('data-id')); return; }
+      const delBtn = e.target.closest('.delete-btn');
+      if(delBtn){ deleteDrink(delBtn.getAttribute('data-id')); return; }
+      const pinBtn = e.target.closest('.pin-btn');
+      if(pinBtn){ toggleFavorite(pinBtn.getAttribute('data-id')); return; }
+      const opener = e.target.closest('[data-open]');
+      if(opener){ openDetailModal(opener.getAttribute('data-open')); return; }
+    });
+  }
+
+  function setUnit(u){
+    if(u !== 'oz' && u !== 'ml') return;
+    unit = u;
+    try{ localStorage.setItem(UNIT_KEY, u); }catch(e){ /* non-fatal: unit just won't persist */ }
+    document.querySelectorAll('.unit-toggle button').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-unit') === u);
+    });
+    populateSizeOptions();
+  }
+
+  function init(){
+    populateStaticFormBits();
+    bindRatingWidget();
+    bindImageInput();
+    bindStepper();
+    bindBuyAgainToggle();
+    bindLimitedToggle();
+    bindGlobalEvents();
+    setUnit(unit);
+    renderFilterRow();
+    renderAll();
+    document.getElementById('storageBanner').classList.toggle('show', usingFallback);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
